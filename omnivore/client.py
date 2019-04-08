@@ -33,7 +33,7 @@ def get_headers():
 
 def get(url):
     try:
-        res = requests.get(url, headers=get_headers()).json()
+        res = requests.get(url, headers=get_headers())
     except Exception as e:
         handle_request_error(e)
 
@@ -73,14 +73,14 @@ def handle_response(res):
 def handle_request_error(e):
     if isinstance(e, requests.exceptions.RequestException):
         msg = 'Unexpected error communicating with Omnivore.'
-        err = '{}: {}'.format(type(e).__name__, unicode(e))
+        err = '{}: {}'.format(type(e).__name__, str(e))
     else:
         msg = ('Unexpected error communicating with Omnivore. '
                'It looks like there\'s probably a configuration '
                'issue locally.')
         err = 'A {} was raised'.format(type(e).__name__)
-        if unicode(e):
-            err += ' with error message {}'.format(unicode(e))
+        if str(e):
+            err += ' with error message {}'.format(str(e))
         else:
             err += ' with no error message'
 
