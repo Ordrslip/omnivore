@@ -60,7 +60,7 @@ def delete(url):
 
 def handle_response(res):
     try:
-        json = res.json()
+        json = json.loads(res)
     except Exception as e:
         handle_parse_error(e)
 
