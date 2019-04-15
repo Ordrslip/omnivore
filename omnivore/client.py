@@ -34,7 +34,7 @@ def get_headers():
 def get(url):
     try:
         res = requests.get(url, headers=get_headers())
-    except Exception as e:
+    except Exception, e:
         handle_request_error(e)
 
     return handle_response(res)
@@ -43,7 +43,7 @@ def get(url):
 def post(url, json):
     try:
         res = requests.post(url, headers=get_headers(), json=json)
-    except Exception as e:
+    except Exception, e:
         handle_request_error(e)
 
     return handle_response(res)
@@ -52,7 +52,7 @@ def post(url, json):
 def delete(url):
     try:
         res = requests.delete(url, headers=get_headers())
-    except Exception as e:
+    except Exception, e:
         handle_request_error(e)
 
     return handle_response(res)
@@ -61,7 +61,7 @@ def delete(url):
 def handle_response(res):
     try:
         json = res.json()
-    except Exception as e:
+    except ValueError, e:
         handle_parse_error(e)
 
     if not (200 <= res.status_code < 300):
@@ -73,14 +73,14 @@ def handle_response(res):
 def handle_request_error(e):
     if isinstance(e, requests.exceptions.RequestException):
         msg = 'Unexpected error communicating with Omnivore.'
-        err = '{}: {}'.format(type(e).__name__, str(e))
+        err = '{}: {}'.format(type(e).__name__, unicode(e))
     else:
         msg = ('Unexpected error communicating with Omnivore. '
                'It looks like there\'s probably a configuration '
                'issue locally.')
         err = 'A {} was raised'.format(type(e).__name__)
-        if str(e):
-            err += ' with error message {}'.format(str(e))
+        if unicode(e):
+            err += ' with error message {}'.format(unicode(e))
         else:
             err += ' with no error message'
 
@@ -107,6 +107,6 @@ def handle_error_code(json, status_code, headers):
 
 
 def handle_parse_error(e, status_code=None, headers=None):
-    err = '{}: {}'.format(type(e).__name__, str(e))
+    err = '{}: {}'.format(type(e).__name__, unicode(e))
     msg = 'Error parsing Omnivore JSON response. \n\n{}'.format(err)
     raise error.APIError(msg, status_code, headers)
