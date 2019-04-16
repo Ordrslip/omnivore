@@ -7,7 +7,7 @@ from omnivore.util import (
     get_embedded_object,
     has_embedded_objects
 )
-
+from pprint import pprint
 
 class OmnivoreMenuResource(OmnivoreLocationResource):
 
@@ -66,6 +66,16 @@ class Menu(PrintableResource):
         modifiers = get_embedded_object(res, 'modifiers')
         return [Modifier(self.location_id, **m) for m in modifiers]
 
+    @cached_property
+    def modifier_groups(self):
+        res = client.get(ModifierGroup.list_url(self.location_id))
+        groups = get_embedded_object(res, 'modifier_groups')
+        return [
+            ModifierGroup(self.location_id, **mg)
+            for mg
+            in groups
+        ]
+
     def __unicode__(self):
         return '<Omnivore::{} {}>'.format(
             self.__class__.__name__,
@@ -82,9 +92,6 @@ class Category(OmnivoreMenuResource):
     def refresh_from(self, **kwargs):
         self.name = kwargs['name']
 
-        if has_embedded_objects(kwargs):
-            items = get_embedded_object(kwargs, 'items')
-            self.items = [MenuItem(self.location_id, **i) for i in items]
 
 
 class MenuItem(OmnivoreMenuResource):
@@ -95,10 +102,9 @@ class MenuItem(OmnivoreMenuResource):
 
     def refresh_from(self, **kwargs):
         self.name = kwargs['name']
-        self.price = kwargs['price']
-        self.price_levels = kwargs['price_levels']
+        self.price = kwargs['price_per_unit']
+        self.price_levels = kwargs['_embedded']['price_levels']
         self.in_stock = kwargs['in_stock']
-        self.modifier_groups_count = kwargs['modifier_groups_count']
 
     # Retrieving related objects
 
@@ -122,7 +128,6 @@ class Modifier(OmnivoreMenuResource):
     def refresh_from(self, **kwargs):
         self.name = kwargs['name']
         self.price_per_unit = kwargs['price_per_unit']
-        self.price_levels = kwargs['price_levels']
 
     def to_ticket_modifier(self, quantity, price_level=None, comment=None):
         data = {
@@ -139,19 +144,18 @@ class Modifier(OmnivoreMenuResource):
         return data
 
 
-class ModifierGroup(OmnivoreMenuItemResource):
+class ModifierGroup(OmnivoreMenuResource):
 
     @classmethod
-    def list_url(cls, location_id, item_id):
-        base_url = super(ModifierGroup, cls).list_url(location_id, item_id)
+    def list_url(cls, location_id):
+        base_url = super(ModifierGroup, cls).list_url(location_id)
+        print(base_url + 'modifier_groups/' )
         return base_url + 'modifier_groups/'
 
     def refresh_from(self, **kwargs):
         self.name = kwargs['name']
-        self.minimum = kwargs['minimum']
-        self.maximum = kwargs['maximum']
-        self.required = kwargs['required']
+
 
         if has_embedded_objects(kwargs):
-            options = get_embedded_object(kwargs, 'options')
+            options = get_embedded_object(kwargs, 'modifiers')
             self.options = [Modifier(self.location_id, **m) for m in options]
